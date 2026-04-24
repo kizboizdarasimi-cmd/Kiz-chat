@@ -1,36 +1,636 @@
 openapi: 3.1.0
 info:
-  # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: Buzz social platform API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
-    description: Health operations
+  - name: users
+  - name: videos
+  - name: comments
+  - name: chat
+  - name: notifications
+  - name: explore
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
           content:
             application/json:
+              schema: { $ref: "#/components/schemas/HealthStatus" }
+
+  /me:
+    get:
+      operationId: getMe
+      tags: [users]
+      summary: Get current user profile
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/User" }
+    patch:
+      operationId: updateMe
+      tags: [users]
+      summary: Update current user profile
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                displayName: { type: string }
+                bio: { type: string }
+                profilePicture: { type: string }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/User" }
+
+  /me/verify-request:
+    post:
+      operationId: requestVerification
+      tags: [users]
+      summary: Request a verification badge
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/User" }
+
+  /users/search:
+    get:
+      operationId: searchUsers
+      tags: [users]
+      summary: Search users by username
+      parameters:
+        - name: q
+          in: query
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
               schema:
-                $ref: "#/components/schemas/HealthStatus"
+                type: array
+                items: { $ref: "#/components/schemas/UserSummary" }
+
+  /users/{username}:
+    get:
+      operationId: getUserByUsername
+      tags: [users]
+      parameters:
+        - name: username
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/UserProfile" }
+
+  /users/{username}/follow:
+    post:
+      operationId: followUser
+      tags: [users]
+      parameters:
+        - name: username
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/FollowState" }
+    delete:
+      operationId: unfollowUser
+      tags: [users]
+      parameters:
+        - name: username
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/FollowState" }
+
+  /users/{username}/followers:
+    get:
+      operationId: getUserFollowers
+      tags: [users]
+      parameters:
+        - name: username
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/UserSummary" }
+
+  /users/{username}/following:
+    get:
+      operationId: getUserFollowing
+      tags: [users]
+      parameters:
+        - name: username
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/UserSummary" }
+
+  /users/{username}/videos:
+    get:
+      operationId: getUserVideos
+      tags: [videos]
+      parameters:
+        - name: username
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Video" }
+
+  /videos:
+    post:
+      operationId: createVideo
+      tags: [videos]
+      summary: Create a new video post
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                videoUrl: { type: string }
+                thumbnailUrl: { type: string }
+                caption: { type: string }
+              required: [videoUrl, thumbnailUrl, caption]
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Video" }
+
+  /videos/feed:
+    get:
+      operationId: getFeed
+      tags: [videos]
+      summary: For-you feed (newest mixed)
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Video" }
+
+  /videos/following:
+    get:
+      operationId: getFollowingFeed
+      tags: [videos]
+      summary: Videos from users I follow
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Video" }
+
+  /videos/{id}:
+    get:
+      operationId: getVideo
+      tags: [videos]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Video" }
+    delete:
+      operationId: deleteVideo
+      tags: [videos]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Ok" }
+
+  /videos/{id}/like:
+    post:
+      operationId: likeVideo
+      tags: [videos]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/LikeState" }
+    delete:
+      operationId: unlikeVideo
+      tags: [videos]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/LikeState" }
+
+  /videos/{id}/comments:
+    get:
+      operationId: getComments
+      tags: [comments]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Comment" }
+    post:
+      operationId: addComment
+      tags: [comments]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                body: { type: string }
+              required: [body]
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Comment" }
+
+  /chats:
+    get:
+      operationId: getChats
+      tags: [chat]
+      summary: List of all conversations with last message
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/ChatPreview" }
+
+  /chats/{username}:
+    get:
+      operationId: getMessages
+      tags: [chat]
+      parameters:
+        - name: username
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Message" }
+
+  /chats/{username}/messages:
+    post:
+      operationId: sendMessage
+      tags: [chat]
+      parameters:
+        - name: username
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                body: { type: string }
+                kind: { type: string, enum: [text, voice, emoji] }
+                clientId: { type: string }
+              required: [body, kind]
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Message" }
+
+  /chats/{username}/read:
+    post:
+      operationId: markChatRead
+      tags: [chat]
+      parameters:
+        - name: username
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Ok" }
+
+  /chats/{username}/typing:
+    post:
+      operationId: setTyping
+      tags: [chat]
+      parameters:
+        - name: username
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Ok" }
+
+  /notifications:
+    get:
+      operationId: getNotifications
+      tags: [notifications]
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Notification" }
+
+  /notifications/unread-count:
+    get:
+      operationId: getUnreadCount
+      tags: [notifications]
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/UnreadCount" }
+
+  /notifications/read-all:
+    post:
+      operationId: markAllNotificationsRead
+      tags: [notifications]
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Ok" }
+
+  /explore/videos:
+    get:
+      operationId: getTrendingVideos
+      tags: [explore]
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Video" }
+
+  /explore/users:
+    get:
+      operationId: getTrendingUsers
+      tags: [explore]
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/UserSummary" }
+
+  /explore/newest:
+    get:
+      operationId: getNewestVideos
+      tags: [explore]
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Video" }
+
 components:
   schemas:
+    Ok:
+      type: object
+      properties:
+        ok: { type: boolean }
+      required: [ok]
     HealthStatus:
       type: object
       properties:
-        status:
-          type: string
-      required:
-        - status
-
+        status: { type: string }
+      required: [status]
+    User:
+      type: object
+      properties:
+        id: { type: integer }
+        clerkId: { type: string }
+        username: { type: string }
+        displayName: { type: string }
+        bio: { type: string }
+        profilePicture: { type: string }
+        isVerified: { type: boolean }
+        verificationRequested: { type: boolean }
+        followersCount: { type: integer }
+        followingCount: { type: integer }
+        videosCount: { type: integer }
+        createdAt: { type: string, format: date-time }
+      required: [id, username, displayName, bio, profilePicture, isVerified, verificationRequested, followersCount, followingCount, videosCount, createdAt]
+    UserSummary:
+      type: object
+      properties:
+        id: { type: integer }
+        username: { type: string }
+        displayName: { type: string }
+        bio: { type: string }
+        profilePicture: { type: string }
+        isVerified: { type: boolean }
+        followersCount: { type: integer }
+        isFollowing: { type: boolean }
+      required: [id, username, displayName, bio, profilePicture, isVerified, followersCount, isFollowing]
+    UserProfile:
+      type: object
+      properties:
+        id: { type: integer }
+        username: { type: string }
+        displayName: { type: string }
+        bio: { type: string }
+        profilePicture: { type: string }
+        isVerified: { type: boolean }
+        followersCount: { type: integer }
+        followingCount: { type: integer }
+        videosCount: { type: integer }
+        likesCount: { type: integer }
+        isFollowing: { type: boolean }
+        isMe: { type: boolean }
+      required: [id, username, displayName, bio, profilePicture, isVerified, followersCount, followingCount, videosCount, likesCount, isFollowing, isMe]
+    FollowState:
+      type: object
+      properties:
+        isFollowing: { type: boolean }
+        followersCount: { type: integer }
+      required: [isFollowing, followersCount]
+    Video:
+      type: object
+      properties:
+        id: { type: integer }
+        videoUrl: { type: string }
+        thumbnailUrl: { type: string }
+        caption: { type: string }
+        likesCount: { type: integer }
+        commentsCount: { type: integer }
+        liked: { type: boolean }
+        createdAt: { type: string, format: date-time }
+        author: { $ref: "#/components/schemas/UserSummary" }
+      required: [id, videoUrl, thumbnailUrl, caption, likesCount, commentsCount, liked, createdAt, author]
+    LikeState:
+      type: object
+      properties:
+        liked: { type: boolean }
+        likesCount: { type: integer }
+      required: [liked, likesCount]
+    Comment:
+      type: object
+      properties:
+        id: { type: integer }
+        body: { type: string }
+        createdAt: { type: string, format: date-time }
+        author: { $ref: "#/components/schemas/UserSummary" }
+      required: [id, body, createdAt, author]
+    ChatPreview:
+      type: object
+      properties:
+        partner: { $ref: "#/components/schemas/UserSummary" }
+        lastMessage: { type: string }
+        lastMessageAt: { type: string, format: date-time }
+        lastMessageFromMe: { type: boolean }
+        unreadCount: { type: integer }
+        partnerTyping: { type: boolean }
+        partnerOnline: { type: boolean }
+      required: [partner, lastMessage, lastMessageAt, lastMessageFromMe, unreadCount, partnerTyping, partnerOnline]
+    Message:
+      type: object
+      properties:
+        id: { type: integer }
+        senderUsername: { type: string }
+        receiverUsername: { type: string }
+        body: { type: string }
+        kind: { type: string, enum: [text, voice, emoji] }
+        status: { type: string, enum: [sent, delivered, read] }
+        createdAt: { type: string, format: date-time }
+      required: [id, senderUsername, receiverUsername, body, kind, status, createdAt]
+    Notification:
+      type: object
+      properties:
+        id: { type: integer }
+        type: { type: string, enum: [follow, like, comment, message, verified] }
+        message: { type: string }
+        isRead: { type: boolean }
+        createdAt: { type: string, format: date-time }
+        actor: { $ref: "#/components/schemas/UserSummary" }
+        videoId: { type: integer }
+      required: [id, type, message, isRead, createdAt]
+    UnreadCount:
+      type: object
+      properties:
+        count: { type: integer }
+      required: [count]

@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/"
+title = "Buzz - Social Video & Chat"
+version = "1.0.0"
+id = "artifacts/social-app"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 22568
+
+[services.development]
+run = "pnpm --filter @workspace/social-app run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/social-app", "run", "build" ]
+publicDir = "artifacts/social-app/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "22568"
+BASE_PATH = "/"

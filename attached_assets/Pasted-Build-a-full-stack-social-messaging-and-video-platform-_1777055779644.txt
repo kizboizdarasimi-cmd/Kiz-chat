@@ -1,0 +1,257 @@
+Build a full-stack social messaging and video platform that combines WhatsApp-style chat, TikTok-style video feed, and Instagram-style social features.
+
+====================================
+TECH STACK
+
+- Backend: Node.js + Express
+- Real-time: Socket.io
+- Database: MongoDB (Mongoose)
+- Authentication: JWT + bcrypt
+- File uploads: Multer
+- Frontend: HTML, CSS, JavaScript (mobile responsive)
+- Offline support: LocalStorage + Service Workers (PWA-ready)
+
+====================================
+SYSTEM 1 — AUTH & USERS
+
+User model must include:
+
+- username (unique)
+- password (hashed)
+- profilePicture
+- bio
+- followers []
+- following []
+- isVerified (boolean)
+- verificationRequested (boolean)
+
+Features:
+
+- Signup/login
+- JWT authentication
+- Profile editing
+
+====================================
+SYSTEM 2 — REAL-TIME CHAT (WHATSAPP STYLE)
+
+CRITICAL IMPLEMENTATION:
+
+- Maintain:
+  const users = {}
+
+- On connection:
+  socket.on("register", username)
+  users[username] = socket.id
+
+- Private messaging:
+  socket.on("private message", data => {
+  const receiverSocket = users[data.to]
+  
+  if (receiverSocket) {
+  io.to(receiverSocket).emit("private message", data)
+  }
+  
+  io.to(socket.id).emit("private message", data)
+  })
+
+Message model:
+
+- sender
+- receiver
+- message
+- timestamp
+- status (sent, delivered, read)
+
+Features:
+
+- One-to-one chat
+- Typing indicator
+- Online status
+- Read receipts ✔✔
+
+OFFLINE CHAT:
+
+- Save messages in LocalStorage if offline
+- Auto-send when online
+
+====================================
+SYSTEM 3 — VIDEO SYSTEM (TIKTOK STYLE)
+
+Video model:
+
+- user
+- videoUrl
+- caption
+- likes []
+- comments []
+- timestamp
+
+Features:
+
+- Upload video (Multer)
+- Full-screen vertical scrolling
+- Auto-play
+- Like ❤️
+- Comment 💬
+
+====================================
+SYSTEM 4 — SOCIAL SYSTEM
+
+Follow system:
+
+- Follow/unfollow users
+- Update followers/following arrays
+
+Profile page:
+
+- Picture
+- Username + ✔ badge
+- Bio
+- Followers / Following
+- User videos
+
+Search system:
+GET /search/users?query=
+
+- Case-insensitive search
+- Show follow button
+
+====================================
+SYSTEM 5 — NOTIFICATIONS
+
+Notification model:
+
+- receiver
+- sender
+- type (follow, like, comment)
+- message
+- isRead
+- timestamp
+
+Triggers:
+
+- Follow → notify
+- Like → notify
+- Comment → notify
+
+Real-time:
+io.to(users[receiver]).emit("notification", data)
+
+UI:
+
+- Bell icon 🔔
+- Unread badge
+- Notification list
+
+====================================
+SYSTEM 6 — EXPLORE / TRENDING
+
+Trending formula:
+score = (likes * 2) + (comments * 3) + freshness
+
+Endpoints:
+
+- GET /explore/videos
+- GET /explore/users
+
+Explore page:
+
+- Trending videos
+- Trending users
+- Tabs:
+  [Trending] [Newest] [Following]
+
+====================================
+SYSTEM 7 — VERIFICATION ✔
+
+- Users request verification
+- Admin approves
+- Show ✔ badge everywhere
+
+====================================
+SYSTEM 8 — OFFLINE + PWA
+
+- navigator.onLine detection
+- LocalStorage message queue
+- Auto-send when online
+- Service Worker caching
+- manifest.json for installable app
+
+====================================
+SYSTEM 9 — UI STRUCTURE
+
+Bottom navigation:
+[Chat] [Feed] [Explore] [Search] [Profile]
+
+Chat:
+
+- WhatsApp-style UI
+
+Feed:
+
+- TikTok-style scroll
+
+Explore:
+
+- Trending content
+
+Profile:
+
+- User info
+
+====================================
+SYSTEM 10 — EXTRA FEATURES
+
+- Emojis 😄
+- Voice messages 🎤
+- Basic WebRTC calls 📞
+
+====================================
+FILE STRUCTURE
+
+- server.js
+- models/
+  User.js
+  Message.js
+  Video.js
+  Notification.js
+- routes/
+  auth.js
+  chat.js
+  follow.js
+  search.js
+  explore.js
+  notification.js
+- public/
+  index.html
+  chat.html
+  feed.html
+  explore.html
+  profile.html
+  style.css
+  app.js
+- service-worker.js
+- manifest.json
+
+====================================
+IMPORTANT RULES
+
+- Messages must show for both users
+- No duplicate likes or follows
+- Notifications must be real-time + stored
+- Offline messages must send when online
+- UI must be mobile-friendly
+- App must run on Replit
+
+====================================
+GOAL
+
+Create a complete social platform where:
+
+- Users chat like WhatsApp
+- Users post videos like TikTok
+- Users follow each other like Instagram
+- Users get notifications
+- Users discover content via Explore
+- App works offline and online
+- App can be deployed and turned into a mobile app

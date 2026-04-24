@@ -1,0 +1,8 @@
+uploads = []
+outputs = []
+
+[[generated]]
+id = "zMdVrJsX6IAIDDYRKTGrb"
+uri = "file://artifacts/social-app/public/hero-mockup.png"
+type = "image"
+title = "Mobile app screenshot of video feed"
