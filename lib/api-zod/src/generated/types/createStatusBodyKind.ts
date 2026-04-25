@@ -6,12 +6,11 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export type SendMessageBodyKind =
-  (typeof SendMessageBodyKind)[keyof typeof SendMessageBodyKind];
+export type CreateStatusBodyKind =
+  (typeof CreateStatusBodyKind)[keyof typeof CreateStatusBodyKind];
 
-export const SendMessageBodyKind = {
+export const CreateStatusBodyKind = {
   text: "text",
-  voice: "voice",
-  emoji: "emoji",
   image: "image",
+  video: "video",
 } as const;

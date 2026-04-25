@@ -11,6 +11,11 @@ import {
   GetUserVideosResponse,
   FollowUserResponse,
   UnfollowUserResponse,
+  UpdatePrivacyBody,
+  UpdatePrivacyResponse,
+  GetBlockedUsersResponse,
+  BlockUserResponse,
+  UnblockUserResponse,
 } from "@workspace/api-zod";
 import {
   db,
@@ -19,18 +24,16 @@ import {
   videosTable,
   likesTable,
   notificationsTable,
+  blockedTable,
 } from "@workspace/db";
-import { and, desc, eq, ilike, inArray, ne, sql } from "drizzle-orm";
+import { and, desc, eq, inArray, ne, sql } from "drizzle-orm";
 import { requireMe } from "../lib/auth";
 import { buildUserSummaries } from "../lib/userSummary";
 
 const router: IRouter = Router();
 
-router.get("/me", requireMe, async (req, res) => {
-  const meId = req.meId!;
-  const rows = await db.select().from(usersTable).where(eq(usersTable.id, meId));
-  const me = rows[0]!;
-  const data = GetMeResponse.parse({
+function userToResponse(me: typeof usersTable.$inferSelect) {
+  return {
     id: me.id,
     clerkId: me.clerkId,
     username: me.username,
@@ -42,9 +45,15 @@ router.get("/me", requireMe, async (req, res) => {
     followersCount: me.followersCount,
     followingCount: me.followingCount,
     videosCount: me.videosCount,
+    lastSeenVisible: me.lastSeenVisible,
     createdAt: me.createdAt.toISOString(),
-  });
-  res.json(data);
+  };
+}
+
+router.get("/me", requireMe, async (req, res) => {
+  const meId = req.meId!;
+  const rows = await db.select().from(usersTable).where(eq(usersTable.id, meId));
+  res.json(GetMeResponse.parse(userToResponse(rows[0]!)));
 });
 
 router.patch("/me", requireMe, async (req, res) => {
@@ -59,32 +68,45 @@ router.patch("/me", requireMe, async (req, res) => {
     await db.update(usersTable).set(update).where(eq(usersTable.id, meId));
   }
   const rows = await db.select().from(usersTable).where(eq(usersTable.id, meId));
-  const me = rows[0]!;
-  const data = UpdateMeResponse.parse({
-    id: me.id,
-    clerkId: me.clerkId,
-    username: me.username,
-    displayName: me.displayName,
-    bio: me.bio,
-    profilePicture: me.profilePicture,
-    isVerified: me.isVerified,
-    verificationRequested: me.verificationRequested,
-    followersCount: me.followersCount,
-    followingCount: me.followingCount,
-    videosCount: me.videosCount,
-    createdAt: me.createdAt.toISOString(),
-  });
-  res.json(data);
+  res.json(UpdateMeResponse.parse(userToResponse(rows[0]!)));
 });
 
-router.post("/me/request-verification", requireMe, async (req, res) => {
+router.patch("/me/privacy", requireMe, async (req, res) => {
+  const meId = req.meId!;
+  const body = UpdatePrivacyBody.parse(req.body ?? {});
+  if (typeof body.lastSeenVisible === "boolean") {
+    await db
+      .update(usersTable)
+      .set({ lastSeenVisible: body.lastSeenVisible })
+      .where(eq(usersTable.id, meId));
+  }
+  const rows = await db.select().from(usersTable).where(eq(usersTable.id, meId));
+  res.json(UpdatePrivacyResponse.parse(userToResponse(rows[0]!)));
+});
+
+router.get("/me/blocked", requireMe, async (req, res) => {
+  const meId = req.meId!;
+  const rows = await db
+    .select({ id: blockedTable.blockedId })
+    .from(blockedTable)
+    .where(eq(blockedTable.blockerId, meId));
+  const ids = rows.map((r) => r.id);
+  if (ids.length === 0) {
+    res.json([]);
+    return;
+  }
+  const summaries = await buildUserSummaries(meId, ids);
+  res.json(GetBlockedUsersResponse.parse(ids.map((id) => summaries.get(id)!)));
+});
+
+router.post("/me/verify-request", requireMe, async (req, res) => {
   const meId = req.meId!;
   await db
     .update(usersTable)
     .set({ verificationRequested: true })
     .where(eq(usersTable.id, meId));
-  const data = RequestVerificationResponse.parse({ verificationRequested: true });
-  res.json(data);
+  const rows = await db.select().from(usersTable).where(eq(usersTable.id, meId));
+  res.json(RequestVerificationResponse.parse(userToResponse(rows[0]!)));
 });
 
 router.get("/users/search", requireMe, async (req, res) => {
@@ -303,7 +325,7 @@ router.post("/users/:username/follow", requireMe, async (req, res) => {
   );
 });
 
-router.post("/users/:username/unfollow", requireMe, async (req, res) => {
+router.delete("/users/:username/follow", requireMe, async (req, res) => {
   const meId = req.meId!;
   const target = await db
     .select()
@@ -346,6 +368,76 @@ router.post("/users/:username/unfollow", requireMe, async (req, res) => {
       followersCount: refreshed.followersCount,
     }),
   );
+});
+
+router.post("/users/:username/block", requireMe, async (req, res) => {
+  const meId = req.meId!;
+  const target = await db
+    .select()
+    .from(usersTable)
+    .where(eq(usersTable.username, String(req.params.username)));
+  if (target.length === 0) {
+    res.status(404).json({ error: "User not found" });
+    return;
+  }
+  const t = target[0]!;
+  if (t.id === meId) {
+    res.status(400).json({ error: "Cannot block yourself" });
+    return;
+  }
+  const existing = await db
+    .select()
+    .from(blockedTable)
+    .where(
+      and(
+        eq(blockedTable.blockerId, meId),
+        eq(blockedTable.blockedId, t.id),
+      ),
+    );
+  if (existing.length === 0) {
+    await db
+      .insert(blockedTable)
+      .values({ blockerId: meId, blockedId: t.id });
+    await db
+      .delete(followsTable)
+      .where(
+        and(
+          eq(followsTable.followerId, meId),
+          eq(followsTable.followingId, t.id),
+        ),
+      );
+    await db
+      .delete(followsTable)
+      .where(
+        and(
+          eq(followsTable.followerId, t.id),
+          eq(followsTable.followingId, meId),
+        ),
+      );
+  }
+  res.json(BlockUserResponse.parse({ isBlocked: true }));
+});
+
+router.delete("/users/:username/block", requireMe, async (req, res) => {
+  const meId = req.meId!;
+  const target = await db
+    .select()
+    .from(usersTable)
+    .where(eq(usersTable.username, String(req.params.username)));
+  if (target.length === 0) {
+    res.status(404).json({ error: "User not found" });
+    return;
+  }
+  const t = target[0]!;
+  await db
+    .delete(blockedTable)
+    .where(
+      and(
+        eq(blockedTable.blockerId, meId),
+        eq(blockedTable.blockedId, t.id),
+      ),
+    );
+  res.json(UnblockUserResponse.parse({ isBlocked: false }));
 });
 
 export default router;

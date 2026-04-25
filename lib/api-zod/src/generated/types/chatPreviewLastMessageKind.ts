@@ -6,10 +6,10 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export type SendMessageBodyKind =
-  (typeof SendMessageBodyKind)[keyof typeof SendMessageBodyKind];
+export type ChatPreviewLastMessageKind =
+  (typeof ChatPreviewLastMessageKind)[keyof typeof ChatPreviewLastMessageKind];
 
-export const SendMessageBodyKind = {
+export const ChatPreviewLastMessageKind = {
   text: "text",
   voice: "voice",
   emoji: "emoji",

@@ -62,7 +62,7 @@ export async function getOrCreateMe(clerkId: string): Promise<number> {
       [u.firstName, u.lastName].filter(Boolean).join(" ") ||
       u.username ||
       u.emailAddresses[0]?.emailAddress?.split("@")[0] ||
-      "Buzz user";
+      "Kizchat user";
     profilePicture = u.imageUrl || "";
     usernameBase = slugifyUsername(
       u.username ||
@@ -70,7 +70,7 @@ export async function getOrCreateMe(clerkId: string): Promise<number> {
         "user",
     );
   } catch {
-    displayName = "Buzz user";
+    displayName = "Kizchat user";
     usernameBase = `user_${Math.random().toString(36).slice(2, 8)}`;
   }
   const username = await ensureUniqueUsername(usernameBase);

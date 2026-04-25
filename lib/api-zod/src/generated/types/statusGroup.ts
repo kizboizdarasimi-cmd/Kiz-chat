@@ -5,11 +5,11 @@
  * Kizchat social platform API
  * OpenAPI spec version: 0.1.0
  */
+import type { Status } from "./status";
 import type { UserSummary } from "./userSummary";
 
-export interface Comment {
-  id: number;
-  body: string;
-  createdAt: Date;
+export interface StatusGroup {
   author: UserSummary;
+  statuses: Status[];
+  isMe: boolean;
 }

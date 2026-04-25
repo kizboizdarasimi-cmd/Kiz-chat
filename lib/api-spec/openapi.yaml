@@ -2,7 +2,7 @@ openapi: 3.1.0
 info:
   title: Api
   version: 0.1.0
-  description: Buzz social platform API
+  description: Kizchat social platform API
 servers:
   - url: /api
     description: Base API path
@@ -14,6 +14,8 @@ tags:
   - name: chat
   - name: notifications
   - name: explore
+  - name: status
+  - name: privacy
 paths:
   /healthz:
     get:
@@ -105,6 +107,119 @@ paths:
           content:
             application/json:
               schema: { $ref: "#/components/schemas/UserProfile" }
+
+  /users/{username}/block:
+    post:
+      operationId: blockUser
+      tags: [privacy]
+      parameters:
+        - name: username
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/BlockState" }
+    delete:
+      operationId: unblockUser
+      tags: [privacy]
+      parameters:
+        - name: username
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/BlockState" }
+
+  /me/privacy:
+    patch:
+      operationId: updatePrivacy
+      tags: [privacy]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                lastSeenVisible: { type: boolean }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/User" }
+
+  /me/blocked:
+    get:
+      operationId: getBlockedUsers
+      tags: [privacy]
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/UserSummary" }
+
+  /statuses:
+    get:
+      operationId: getStatuses
+      tags: [status]
+      summary: Status feed grouped by author (mine + people I follow), last 24h
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/StatusGroup" }
+    post:
+      operationId: createStatus
+      tags: [status]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                kind: { type: string, enum: [text, image, video] }
+                body: { type: string }
+                mediaUrl: { type: string }
+                backgroundColor: { type: string }
+              required: [kind]
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Status" }
+
+  /statuses/{id}:
+    delete:
+      operationId: deleteStatus
+      tags: [status]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Ok" }
 
   /users/{username}/follow:
     post:
@@ -347,6 +462,12 @@ paths:
       operationId: getChats
       tags: [chat]
       summary: List of all conversations with last message
+      parameters:
+        - name: archived
+          in: query
+          required: false
+          schema: { type: string, enum: ["true", "false"] }
+          description: Pass "true" to fetch archived chats only. Otherwise non-archived chats are returned.
       responses:
         "200":
           description: OK
@@ -356,7 +477,7 @@ paths:
                 type: array
                 items: { $ref: "#/components/schemas/ChatPreview" }
 
-  /chats/{username}:
+  /chats/{username}/messages:
     get:
       operationId: getMessages
       tags: [chat]
@@ -373,8 +494,6 @@ paths:
               schema:
                 type: array
                 items: { $ref: "#/components/schemas/Message" }
-
-  /chats/{username}/messages:
     post:
       operationId: sendMessage
       tags: [chat]
@@ -391,7 +510,7 @@ paths:
               type: object
               properties:
                 body: { type: string }
-                kind: { type: string, enum: [text, voice, emoji] }
+                kind: { type: string, enum: [text, voice, emoji, image] }
                 clientId: { type: string }
               required: [body, kind]
       responses:
@@ -400,6 +519,90 @@ paths:
           content:
             application/json:
               schema: { $ref: "#/components/schemas/Message" }
+
+  /chats/{username}/messages/{id}:
+    delete:
+      operationId: deleteMessage
+      tags: [chat]
+      parameters:
+        - name: username
+          in: path
+          required: true
+          schema: { type: string }
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+        - name: scope
+          in: query
+          required: false
+          schema: { type: string, enum: [me, everyone] }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Ok" }
+
+  /chats/{username}/pin:
+    post:
+      operationId: pinChat
+      tags: [chat]
+      parameters:
+        - name: username
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Ok" }
+    delete:
+      operationId: unpinChat
+      tags: [chat]
+      parameters:
+        - name: username
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Ok" }
+
+  /chats/{username}/archive:
+    post:
+      operationId: archiveChat
+      tags: [chat]
+      parameters:
+        - name: username
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Ok" }
+    delete:
+      operationId: unarchiveChat
+      tags: [chat]
+      parameters:
+        - name: username
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Ok" }
 
   /chats/{username}/read:
     post:
@@ -533,8 +736,9 @@ components:
         followersCount: { type: integer }
         followingCount: { type: integer }
         videosCount: { type: integer }
+        lastSeenVisible: { type: boolean }
         createdAt: { type: string, format: date-time }
-      required: [id, username, displayName, bio, profilePicture, isVerified, verificationRequested, followersCount, followingCount, videosCount, createdAt]
+      required: [id, username, displayName, bio, profilePicture, isVerified, verificationRequested, followersCount, followingCount, videosCount, lastSeenVisible, createdAt]
     UserSummary:
       type: object
       properties:
@@ -601,12 +805,17 @@ components:
       properties:
         partner: { $ref: "#/components/schemas/UserSummary" }
         lastMessage: { type: string }
+        lastMessageKind: { type: string, enum: [text, voice, emoji, image] }
         lastMessageAt: { type: string, format: date-time }
         lastMessageFromMe: { type: boolean }
+        lastMessageStatus: { type: string, enum: [sent, delivered, read] }
         unreadCount: { type: integer }
         partnerTyping: { type: boolean }
         partnerOnline: { type: boolean }
-      required: [partner, lastMessage, lastMessageAt, lastMessageFromMe, unreadCount, partnerTyping, partnerOnline]
+        pinned: { type: boolean }
+        archived: { type: boolean }
+        blocked: { type: boolean }
+      required: [partner, lastMessage, lastMessageKind, lastMessageAt, lastMessageFromMe, lastMessageStatus, unreadCount, partnerTyping, partnerOnline, pinned, archived, blocked]
     Message:
       type: object
       properties:
@@ -614,10 +823,36 @@ components:
         senderUsername: { type: string }
         receiverUsername: { type: string }
         body: { type: string }
-        kind: { type: string, enum: [text, voice, emoji] }
+        kind: { type: string, enum: [text, voice, emoji, image] }
         status: { type: string, enum: [sent, delivered, read] }
+        deletedForEveryone: { type: boolean }
         createdAt: { type: string, format: date-time }
-      required: [id, senderUsername, receiverUsername, body, kind, status, createdAt]
+      required: [id, senderUsername, receiverUsername, body, kind, status, deletedForEveryone, createdAt]
+    Status:
+      type: object
+      properties:
+        id: { type: integer }
+        kind: { type: string, enum: [text, image, video] }
+        body: { type: string }
+        mediaUrl: { type: string }
+        backgroundColor: { type: string }
+        createdAt: { type: string, format: date-time }
+        expiresAt: { type: string, format: date-time }
+      required: [id, kind, body, mediaUrl, backgroundColor, createdAt, expiresAt]
+    StatusGroup:
+      type: object
+      properties:
+        author: { $ref: "#/components/schemas/UserSummary" }
+        statuses:
+          type: array
+          items: { $ref: "#/components/schemas/Status" }
+        isMe: { type: boolean }
+      required: [author, statuses, isMe]
+    BlockState:
+      type: object
+      properties:
+        isBlocked: { type: boolean }
+      required: [isBlocked]
     Notification:
       type: object
       properties:

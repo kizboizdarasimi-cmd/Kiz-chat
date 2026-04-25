@@ -6,6 +6,6 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export type SearchUsersParams = {
-  q: string;
+export type UpdatePrivacyBody = {
+  lastSeenVisible?: boolean;
 };

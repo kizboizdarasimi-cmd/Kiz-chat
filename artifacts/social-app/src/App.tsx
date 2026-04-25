@@ -32,6 +32,8 @@ import Notifications from "@/pages/notifications";
 import Upload from "@/pages/upload";
 import EditProfile from "@/pages/edit-profile";
 import Onboarding from "@/pages/onboarding";
+import StatusPage from "@/pages/status";
+import Settings from "@/pages/settings";
 import NotFound from "@/pages/not-found";
 
 const queryClient = new QueryClient({
@@ -192,14 +194,14 @@ function ClerkProviderWithRoutes() {
       localization={{
         signIn: {
           start: {
-            title: "Welcome back to Buzz",
-            subtitle: "Sign in to keep watching, chatting, and posting",
+            title: "Welcome back to Kizchat",
+            subtitle: "Sign in to keep chatting, posting, and watching",
           },
         },
         signUp: {
           start: {
-            title: "Join Buzz",
-            subtitle: "Create your account to share videos and chat",
+            title: "Join Kizchat",
+            subtitle: "Create your account to chat, post status, and share videos",
           },
         },
       }}
@@ -258,6 +260,16 @@ function ClerkProviderWithRoutes() {
             <Route path="/me/edit">
               <Protected>
                 <EditProfile />
+              </Protected>
+            </Route>
+            <Route path="/status">
+              <Protected>
+                <StatusPage />
+              </Protected>
+            </Route>
+            <Route path="/settings">
+              <Protected>
+                <Settings />
               </Protected>
             </Route>
             <Route path="/u/:username">

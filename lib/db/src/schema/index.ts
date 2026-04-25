@@ -5,3 +5,6 @@ export * from "./comments";
 export * from "./follows";
 export * from "./messages";
 export * from "./notifications";
+export * from "./statuses";
+export * from "./blocked";
+export * from "./chatSettings";

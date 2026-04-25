@@ -6,9 +6,10 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export type MessageStatus = (typeof MessageStatus)[keyof typeof MessageStatus];
+export type ChatPreviewLastMessageStatus =
+  (typeof ChatPreviewLastMessageStatus)[keyof typeof ChatPreviewLastMessageStatus];
 
-export const MessageStatus = {
+export const ChatPreviewLastMessageStatus = {
   sent: "sent",
   delivered: "delivered",
   read: "read",

@@ -17,6 +17,9 @@ export const messagesTable = pgTable(
     body: text("body").notNull(),
     kind: text("kind").notNull().default("text"),
     status: text("status").notNull().default("sent"),
+    deletedForSender: text("deleted_for_sender").notNull().default("false"),
+    deletedForReceiver: text("deleted_for_receiver").notNull().default("false"),
+    deletedForEveryone: text("deleted_for_everyone").notNull().default("false"),
     createdAt: timestamp("created_at").notNull().defaultNow(),
   },
   (t) => [

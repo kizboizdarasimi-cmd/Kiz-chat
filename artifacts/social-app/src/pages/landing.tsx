@@ -24,10 +24,10 @@ export default function Landing() {
             </svg>
           </div>
           <h1 className="text-5xl font-black tracking-tight text-foreground mb-2">
-            Buzz
+            Kizchat
           </h1>
           <p className="text-lg text-muted-foreground max-w-[280px]">
-            Watch, chat, and share your vibe. The new way to connect.
+            Chat, post status updates, and share your vibe. All in one place.
           </p>
         </motion.div>
 
@@ -39,7 +39,7 @@ export default function Landing() {
         >
           <img 
             src="/hero-mockup.png" 
-            alt="Buzz App Preview" 
+            alt="Kizchat App Preview" 
             className="w-full h-full object-cover"
           />
           {/* Overlay gradient */}

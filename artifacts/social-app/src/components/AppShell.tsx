@@ -1,6 +1,6 @@
 import React from "react";
 import { Link, useLocation } from "wouter";
-import { Home, Compass, Plus, MessageCircle, User, Bell } from "lucide-react";
+import { Home, Compass, Plus, MessageCircle, User, Bell, Camera } from "lucide-react";
 import { useGetMe, useGetUnreadCount } from "@workspace/api-client-react";
 import { cn } from "@/lib/utils";
 
@@ -11,7 +11,7 @@ interface AppShellProps {
   showBack?: boolean;
 }
 
-export function AppShell({ children, hideTopBar = false, title = "Buzz", showBack = false }: AppShellProps) {
+export function AppShell({ children, hideTopBar = false, title = "Kizchat", showBack = false }: AppShellProps) {
   const [location] = useLocation();
   const { data: me } = useGetMe();
   const { data: unread } = useGetUnreadCount();
@@ -19,6 +19,7 @@ export function AppShell({ children, hideTopBar = false, title = "Buzz", showBac
   const isFeed = location === "/feed";
   const isExplore = location === "/explore";
   const isChats = location.startsWith("/chats") && location === "/chats";
+  const isStatus = location === "/status";
   const isProfile = me && location === `/u/${me.username}`;
 
   return (
@@ -59,6 +60,9 @@ export function AppShell({ children, hideTopBar = false, title = "Buzz", showBac
         </Link>
         <Link href="/explore" className={cn("flex flex-col items-center justify-center p-2 text-muted-foreground transition-colors", isExplore && "text-primary")}>
           <Compass className={cn("h-6 w-6", isExplore && "fill-current")} />
+        </Link>
+        <Link href="/status" className={cn("flex flex-col items-center justify-center p-2 text-muted-foreground transition-colors", isStatus && "text-primary")}>
+          <Camera className={cn("h-6 w-6", isStatus && "fill-current")} />
         </Link>
         <Link href="/upload" className="flex items-center justify-center -mt-6 h-12 w-12 rounded-full bg-primary text-primary-foreground shadow-lg shadow-primary/25 transition-transform hover:scale-105 active:scale-95">
           <Plus className="h-6 w-6" />

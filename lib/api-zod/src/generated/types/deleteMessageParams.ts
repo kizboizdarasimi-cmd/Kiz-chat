@@ -5,7 +5,8 @@
  * Kizchat social platform API
  * OpenAPI spec version: 0.1.0
  */
+import type { DeleteMessageScope } from "./deleteMessageScope";
 
-export type SearchUsersParams = {
-  q: string;
+export type DeleteMessageParams = {
+  scope?: DeleteMessageScope;
 };

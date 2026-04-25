@@ -1,6 +1,6 @@
-# Buzz — Social Video & Chat
+# Kizchat — Social Video & Chat
 
-A mobile-first social platform combining TikTok-style video, WhatsApp-style chat, and Instagram-style social features.
+A mobile-first social platform combining TikTok-style video, WhatsApp-style chat, and Instagram-style social features. Branded as **Kizchat** (originally Buzz).
 
 ## Stack
 
@@ -28,7 +28,13 @@ A mobile-first social platform combining TikTok-style video, WhatsApp-style chat
 - Video upload from URL or local file, auto thumbnail extraction.
 - Profiles with verified badge, follow/unfollow, follower/following counts, video grid.
 - Search users, Explore (Trending/Newest videos, Trending people).
-- 1:1 chat with read receipts, typing indicators, online presence, voice + text + emoji messages, offline outbox.
+- 1:1 chat with delivery + read receipts, typing indicators, online presence, voice + text + emoji + image messages, offline outbox.
+- Pin & archive chats; long-press / menu actions per chat row.
+- Delete messages: "for me" or "for everyone" (within sender's own messages).
+- Block/unblock users (filters chats and messages on the server). Manage blocked users in Settings.
+- Privacy: toggle "last seen & online" visibility in Settings.
+- Status (24h disappearing stories): text on color, image, or video with caption. Story viewer with progress bars and tap-to-advance.
+- Voice/Video call buttons in chat header (placeholder dialog — needs paid call infra to actually ring).
 - Notification center with unread badge.
 
 ## Common commands

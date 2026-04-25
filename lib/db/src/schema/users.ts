@@ -26,6 +26,7 @@ export const usersTable = pgTable(
     videosCount: integer("videos_count").notNull().default(0),
     likesCount: integer("likes_count").notNull().default(0),
     lastSeenAt: timestamp("last_seen_at").notNull().defaultNow(),
+    lastSeenVisible: boolean("last_seen_visible").notNull().default(true),
     createdAt: timestamp("created_at").notNull().defaultNow(),
   },
   (t) => [
